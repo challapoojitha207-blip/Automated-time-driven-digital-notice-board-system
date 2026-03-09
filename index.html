@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Multi-Channel Digital Notice Board</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header>
+<h2>📢 Multi-Channel Digital Notice Board</h2>
+</header>
+
+<div class="container">
+
+    <!-- CHANNEL SECTION -->
+    <div class="channel-panel">
+        <h3>Create Channel</h3>
+        <input type="text" id="channelName" placeholder="Channel Name">
+        <button onclick="createChannel()">Create</button>
+
+        <h3>Channels</h3>
+        <div id="channelList"></div>
+    </div>
+
+    <!-- MAIN BOARD -->
+    <div class="main-board">
+
+        <h3 id="currentChannelTitle">Select a Channel</h3>
+
+        <form id="noticeForm">
+            <input type="text" id="title" placeholder="Title" required>
+            <textarea id="description" placeholder="Description" required></textarea>
+            <input type="datetime-local" id="expiry" required>
+
+            <select id="priority" required>
+                <option value="">Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+
+            <button type="submit">Post Notice</button>
+        </form>
+
+        <hr>
+        <div id="noticeContainer"></div>
+
+    </div>
+
+</div>
+
+<script src="arraylogic.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
