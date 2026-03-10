@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Channel Digital Notice Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161921;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --text: #e8eaf0;
+    --muted: #6b7494;
+    --high: #ef4444;
+    --medium: #f97316;
+    --low: #22c55e;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(79,142,247,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(124,58,237,0.06) 0%, transparent 60%);
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+
+  header h1 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+  header p  { font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
+
+  .header-user { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .user-name-label { font-size: 0.82rem; color: var(--muted); }
+
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: white;
+    border: 2px solid var(--border); cursor: default;
+  }
+
+  /* LAYOUT */
+  .container {
+    display: flex;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 20px;
+    gap: 22px;
+  }
+
+  /* SIDEBAR */
+  .sidebar { width: 265px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+  }
+
+  .input-row { display: flex; gap: 8px; }
+
+  .input-row input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-row input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  .btn-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 8px; color: white;
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
+  }
+
+  .btn-icon:hover { opacity: 0.85; transform: scale(1.05); }
+
+  /* channel list */
+  #channelList { display: flex; flex-direction: column; gap: 6px; }
+
+  .channel-btn {
+    width: 100%; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 11px;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; cursor: pointer;
+    text-align: left; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .channel-btn::before { content: '#'; font-weight: 700; color: var(--border); transition: color 0.2s; }
+  .channel-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+  .channel-btn:hover::before { color: var(--accent); }
+
+  .channel-btn.active {
+    background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,58,237,0.1));
+    border-color: var(--accent); color: var(--text); font-weight: 500;
+  }
+
+  .channel-btn.active::before { color: var(--accent); }
+
+  .ch-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .channel-count {
+    background: var(--surface2); border-radius: 20px;
+    padding: 2px 7px; font-size: 0.7rem; color: var(--muted);
+  }
+
+  .channel-btn.active .channel-count { background: rgba(79,142,247,0.2); color: var(--accent); }
+
+  .owner-tag {
+    font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+    background: rgba(124,58,237,0.15); color: var(--accent2);
+    border: 1px solid rgba(124,58,237,0.25); white-space: nowrap;
+  }
+
+  .ch-del-btn {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 12px;
+    opacity: 0; transition: opacity 0.2s, color 0.2s;
+    padding: 2px 3px; border-radius: 4px;
+  }
+
+  .channel-btn:hover .ch-del-btn { opacity: 1; }
+  .ch-del-btn:hover { color: var(--high); background: rgba(239,68,68,0.1); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 18px 10px;
+    color: var(--muted); font-size: 0.82rem; line-height: 1.6;
+  }
+  .empty-state .icon { font-size: 26px; margin-bottom: 6px; }
+
+  /* MAIN */
+  .main-board { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+  .board-header {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+
+  #currentChannelTitle {
+    font-family: 'Syne', sans-serif; font-size: 1.45rem; font-weight: 800;
+  }
+
+  .board-header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .badge-count {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 20px; padding: 4px 13px; font-size: 0.78rem;
+  }
+
+  .btn-sm {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    padding: 6px 13px; font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;
+  }
+
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--high); color: var(--high); }
+
+  /* FORM */
+  .form-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    display: none; animation: slideDown 0.3s ease;
+  }
+
+  .form-panel.visible { display: block; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-field label {
+    font-size: 0.7rem; font-weight: 500; color: var(--muted);
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color 0.2s; width: 100%;
+  }
+
+  .form-field textarea { resize: vertical; min-height: 80px; }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--accent); }
+  .form-field select option { background: var(--surface2); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; border: none; border-radius: 8px;
+    padding: 11px 24px; margin-top: 14px;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.88rem;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* FILTER */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .filter-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; color: var(--muted);
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .filter-btn.high.active   { background: var(--high);   border-color: var(--high); }
+  .filter-btn.medium.active { background: var(--medium); border-color: var(--medium); }
+  .filter-btn.low.active    { background: var(--low);    border-color: var(--low); }
+
+  /* NOTICES */
+  #noticeContainer { display: flex; flex-direction: column; gap: 12px; }
+
+  .notice {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+    position: relative; overflow: hidden;
+    animation: fadeIn 0.3s ease; transition: transform 0.2s;
+  }
+
+  .notice:hover { transform: translateY(-2px); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .notice::before {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+  }
+
+  .notice.high::before   { background: var(--high); }
+  .notice.medium::before { background: var(--medium); }
+  .notice.low::before    { background: var(--low); }
+
+  .notice-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .notice.high   .priority-dot { background: var(--high);   box-shadow: 0 0 6px var(--high); }
+  .notice.medium .priority-dot { background: var(--medium); box-shadow: 0 0 6px var(--medium); }
+  .notice.low    .priority-dot { background: var(--low);    box-shadow: 0 0 6px var(--low); }
+
+  .notice-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; flex: 1; line-height: 1.3; }
+  .notice-desc  { color: var(--muted); font-size: 0.86rem; line-height: 1.6; margin-bottom: 8px; padding-left: 18px; }
+  .notice-by    { padding-left: 18px; margin-bottom: 12px; font-size: 0.73rem; color: var(--muted); }
+  .notice-by strong { color: var(--accent); }
+
+  .notice-footer { display: flex; align-items: center; justify-content: space-between; padding-left: 18px; gap: 8px; flex-wrap: wrap; }
+  .notice-meta   { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .priority-badge {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px;
+  }
+
+  .notice.high   .priority-badge { background: rgba(239,68,68,0.15);  color: var(--high); }
+  .notice.medium .priority-badge { background: rgba(249,115,22,0.15); color: var(--medium); }
+  .notice.low    .priority-badge { background: rgba(34,197,94,0.15);  color: var(--low); }
+
+  .expiry-text { font-size: 0.75rem; color: var(--muted); }
+  .expiry-text.soon { color: var(--medium); }
+  .expiry-text.due  { color: var(--high); font-weight: 600; }
+
+  .due-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35);
+    color: var(--high); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 5px;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+  .notice.expired { opacity: 0.75; }
+  .notice.expired .notice-title { text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.4); }
+
+  .btn-delete {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 7px; color: var(--high); padding: 5px 12px;
+    font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-delete:hover { background: rgba(239,68,68,0.2); border-color: var(--high); }
+
+  /* SELECT PROMPT */
+  .select-prompt { text-align: center; padding: 80px 20px; color: var(--muted); }
+  .select-prompt .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .select-prompt h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .select-prompt p { font-size: 0.85rem; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    z-index: 500; display: flex;
+    align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; width: 100%; max-width: 480px;
+    padding: 26px; transform: translateY(16px);
+    transition: transform 0.25s; max-height: 88vh; overflow-y: auto;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 18px;
+  }
+
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800; }
+
+  .modal-close {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--muted);
+    width: 29px; height: 29px; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { color: var(--high); border-color: var(--high); }
+
+  /* Member list */
+  .member-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+
+  .member-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 9px;
+  }
+
+  .member-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.78rem; color: white; flex-shrink: 0;
+  }
+
+  .member-info { flex: 1; }
+  .member-name { font-size: 0.88rem; font-weight: 500; }
+  .member-role-text { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+
+  .role-badge {
+    font-size: 0.67rem; padding: 2px 8px; border-radius: 4px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .role-badge.owner  { background: rgba(124,58,237,0.2); color: var(--accent2); border: 1px solid rgba(124,58,237,0.3); }
+  .role-badge.member { background: rgba(79,142,247,0.15); color: var(--accent);  border: 1px solid rgba(79,142,247,0.25); }
+
+  .btn-remove-member {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 13px; padding: 4px;
+    border-radius: 4px; transition: all 0.2s; flex-shrink: 0;
+  }
+
+  .btn-remove-member:hover { color: var(--high); background: rgba(239,68,68,0.1); }
+
+  /* Add member input */
+  .add-member-row { display: flex; gap: 8px; }
+
+  .add-member-row input {
+    flex: 1; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    outline: none; transition: border-color 0.2s;
+  }
+
+  .add-member-row input:focus { border-color: var(--accent); }
+
+  .btn-add-member {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 8px; color: white;
+    padding: 9px 16px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    white-space: nowrap; transition: opacity 0.2s;
+  }
+
+  .btn-add-member:hover { opacity: 0.85; }
+
+  /* Join modal */
+  .join-channel-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .join-channel-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 9px; gap: 10px;
+  }
+
+  .join-channel-info { flex: 1; }
+  .join-channel-name { font-weight: 600; font-size: 0.9rem; }
+  .join-channel-meta { font-size: 0.73rem; color: var(--muted); margin-top: 3px; }
+
+  .btn-join {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 7px; color: white;
+    padding: 7px 16px; font-size: 0.82rem;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: opacity 0.2s;
+  }
+
+  .btn-join:hover { opacity: 0.85; }
+
+  .btn-join.joined {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--low); cursor: default;
+  }
+
+  .btn-join.joined:hover { opacity: 1; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 20px; font-size: 0.85rem; color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    z-index: 9999; opacity: 0; transform: translateY(10px);
+    transition: opacity 0.25s, transform 0.25s; pointer-events: none;
+  }
+
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  .error-msg { font-size: 0.78rem; color: var(--high); margin-top: 6px; display: none; }
+  .error-msg.visible { display: block; }
+
+  /* NAME SETUP */
+  #nameSetup {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9000; padding: 20px;
+  }
+
+  .setup-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 30px;
+    width: 100%; max-width: 360px; text-align: center;
+  }
+
+  .setup-card .big-icon { font-size: 44px; margin-bottom: 14px; }
+  .setup-card h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+  .setup-card p  { color: var(--muted); font-size: 0.86rem; margin-bottom: 20px; line-height: 1.5; }
+
+  .setup-card input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    outline: none; transition: border-color 0.2s;
+    margin-bottom: 12px; text-align: center;
+  }
+
+  .setup-card input:focus { border-color: var(--accent); }
+
+  .btn-setup {
+    width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; padding: 13px; color: white;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+
+  .btn-setup:hover { opacity: 0.88; }
+
+  @media (max-width: 768px) {
+    .container { flex-direction: column; padding: 14px; gap: 14px; }
+    .sidebar { width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAME SETUP SCREEN -->
+<div id="nameSetup">
+  <div class="setup-card">
+    <div class="big-icon">👤</div>
+    <h2>What's your name?</h2>
+    <p>Your name will be shown on notices you post and visible to other channel members.</p>
+    <input type="text" id="setupNameInput" placeholder="Enter your name..." maxlength="30">
+    <button class="btn-setup" onclick="setupUser()">Get Started →</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-icon">📢</div>
+  <div>
+    <h1>Digital Notice Board</h1>
+    <p>Multi-channel announcements & alerts</p>
+  </div>
+  <div class="header-user">
+    <span class="user-name-label" id="headerUserName"></span>
+    <div class="user-avatar" id="headerAvatar"></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="panel">
+      <div class="panel-title">Create Channel</div>
+      <div class="input-row">
+        <input type="text" id="channelName" placeholder="Channel name..." maxlength="30">
+        <button class="btn-icon" onclick="createChannel()" title="Create">+</button>
+      </div>
+      <div class="error-msg" id="channelError">Channel already exists.</div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="panel-title" style="margin-bottom:0;">My Channels</span>
+        <button class="btn-sm" onclick="openJoinModal()" style="padding:4px 11px; font-size:0.73rem;">🔍 Browse</button>
+      </div>
+      <div id="channelList">
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          No channels yet.<br>Create or join one.
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-board">
+
+    <div id="selectPrompt" class="select-prompt">
+      <div class="icon">👈</div>
+      <h3>Select a Channel</h3>
+      <p>Choose or create a channel to view and post notices.</p>
+    </div>
+
+    <div id="boardContent" style="display:none; flex-direction:column; gap:20px;">
+
+      <div class="board-header">
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Channel</div>
+          <h2 id="currentChannelTitle"></h2>
+        </div>
+        <div class="board-header-right">
+          <span class="badge-count" id="noticeCount">0 notices</span>
+          <button class="btn-sm" onclick="openMembersModal()">
+            👥 Members
+            <span id="memberCountBadge" style="background:rgba(79,142,247,0.2);color:var(--accent);border-radius:10px;padding:1px 7px;font-size:0.7rem;margin-left:2px;">0</span>
+          </button>
+          <button class="btn-sm danger" id="leaveBtn" onclick="leaveOrDeleteChannel()">← Leave</button>
+        </div>
+      </div>
+
+      <div class="form-panel visible">
+        <div class="panel-title" style="margin-bottom:16px;">Post a Notice</div>
+        <form id="noticeForm">
+          <div class="form-grid">
+            <div class="form-field full">
+              <label>Title</label>
+              <input type="text" id="title" placeholder="Notice title..." required maxlength="100">
+            </div>
+            <div class="form-field full">
+              <label>Description</label>
+              <textarea id="description" placeholder="What do people need to know?" required maxlength="600"></textarea>
+            </div>
+            <div class="form-field">
+              <label>Expires At</label>
+              <input type="datetime-local" id="expiry" required>
+            </div>
+            <div class="form-field">
+              <label>Priority</label>
+              <select id="priority" required>
+                <option value="">Select priority...</option>
+                <option value="high">🔴 High</option>
+                <option value="medium">🟠 Medium</option>
+                <option value="low">🟢 Low</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Post Notice →</button>
+        </form>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all"    onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn high"   data-filter="high"   onclick="setFilter('high',this)">🔴 High</button>
+        <button class="filter-btn medium" data-filter="medium" onclick="setFilter('medium',this)">🟠 Medium</button>
+        <button class="filter-btn low"    data-filter="low"    onclick="setFilter('low',this)">🟢 Low</button>
+      </div>
+
+      <div id="noticeContainer"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MEMBERS MODAL ── -->
+<div class="modal-overlay" id="membersModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">👥 Channel Members</div>
+      <button class="modal-close" onclick="closeModal('membersModal')">✕</button>
+    </div>
+
+    <div class="panel-title" style="margin-bottom:10px;">Members</div>
+    <div class="member-list" id="memberList"></div>
+
+    <div id="addMemberSection">
+      <div class="panel-title" style="margin-bottom:10px; margin-top:18px;">Add Member</div>
+      <div class="add-member-row">
+        <input type="text" id="addMemberInput" placeholder="Enter member name..." maxlength="30">
+        <button class="btn-add-member" onclick="addMember()">Add</button>
+      </div>
+      <div class="error-msg" id="memberError">Member already in this channel.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── JOIN MODAL ── -->
+<div class="modal-overlay" id="joinModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Browse & Join Channels</div>
+      <button class="modal-close" onclick="closeModal('joinModal')">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:0.84rem;margin-bottom:16px;line-height:1.5;">
+      Browse all available channels below. Once joined, the channel will appear in your sidebar.
+    </p>
+    <div class="join-channel-list" id="joinChannelList"></div>
+    <div id="joinEmptyState" class="empty-state" style="display:none; padding:30px 10px;">
+      <div class="icon">🌐</div>
+      No other channels to join.<br>Create one first!
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────
+  // channels: { name: { notices:[], members:[], owner: string } }
+  let channels     = {};
+  let currentChannel = null;
+  let activeFilter   = 'all';
+  let currentUser    = null;
+
+  try { channels    = JSON.parse(localStorage.getItem('nb_channels')) || {}; } catch(e) { channels = {}; }
+  try { currentUser = localStorage.getItem('nb_user') || null; } catch(e) {}
+
+  // ── BOOT ───────────────────────────────────────────────
+  window.onload = () => {
+    if (currentUser) {
+      document.getElementById('nameSetup').style.display = 'none';
+      initApp();
+    } else {
+      const inp = document.getElementById('setupNameInput');
+      inp.focus();
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') setupUser(); });
+    }
+  };
+
+  function setupUser() {
+    const val = document.getElementById('setupNameInput').value.trim();
+    if (!val) return;
+    currentUser = val;
+    try { localStorage.setItem('nb_user', currentUser); } catch(e) {}
+    document.getElementById('nameSetup').style.display = 'none';
+    initApp();
+  }
+
+  function initApp() {
+    document.getElementById('headerUserName').textContent = currentUser;
+    document.getElementById('headerAvatar').textContent   = currentUser.charAt(0).toUpperCase();
+    renderChannels();
+  }
+
+  // ── SAVE ───────────────────────────────────────────────
+  function saveData() {
+    try { localStorage.setItem('nb_channels', JSON.stringify(channels)); } catch(e) {}
+  }
+
+  // ── TOAST ──────────────────────────────────────────────
+  let toastTimer;
+  function showToast(icon, msg) {
+    const t = document.getElementById('toast');
+    t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── MODALS ─────────────────────────────────────────────
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  // ── HELPERS ────────────────────────────────────────────
+  function myChannels() {
+    return Object.keys(channels).filter(ch =>
+      (channels[ch].members || []).includes(currentUser)
+    );
+  }
+
+  function hideBoard() {
+    currentChannel = null;
+    document.getElementById('selectPrompt').style.display = '';
+    document.getElementById('boardContent').style.display = 'none';
+  }
+
+  // ── CHANNEL: CREATE ────────────────────────────────────
+  function createChannel() {
+    const input = document.getElementById('channelName');
+    const name  = input.value.trim();
+    if (!name) return;
+
+    const err = document.getElementById('channelError');
+    if (channels[name]) {
+      err.classList.add('visible');
+      setTimeout(() => err.classList.remove('visible'), 2500);
+      return;
+    }
+
+    err.classList.remove('visible');
+    channels[name] = { notices: [], members: [currentUser], owner: currentUser };
+    input.value = '';
+    saveData();
+    renderChannels();
+    selectChannel(name);
+    showToast('✅', `Channel "${name}" created`);
+  }
+
+  document.getElementById('channelName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createChannel();
+  });
+
+  // ── CHANNEL: LEAVE OR DELETE ───────────────────────────
+  function leaveOrDeleteChannel() {
+    if (!currentChannel) return;
+    const isOwner = channels[currentChannel].owner === currentUser;
+
+    if (isOwner) {
+      if (!confirm(`You own "${currentChannel}". Deleting it will remove all notices and members. Continue?`)) return;
+      delete channels[currentChannel];
+      saveData();
+      renderChannels();
+      hideBoard();
+      showToast('🗑️', 'Channel deleted');
+    } else {
+      if (!confirm(`Leave "${currentChannel}"?`)) return;
+      channels[currentChannel].members = channels[currentChannel].members.filter(m => m !== currentUser);
+      saveData();
+      renderChannels();
+      hideBoard();
+      showToast('👋', `Left channel`);
+    }
+  }
+
+  // ── CHANNEL: DELETE (from sidebar) ────────────────────
+  function deleteChannelFromSidebar(name) {
+    if (channels[name].owner !== currentUser) {
+      showToast('🚫', 'Only the owner can delete this channel');
+      return;
+    }
+    if (!confirm(`Delete channel "${name}" and all its notices?`)) return;
+    delete channels[name];
+    if (currentChannel === name) hideBoard();
+    saveData();
+    renderChannels();
+    showToast('🗑️', `Channel "${name}" deleted`);
+  }
+
+  // ── CHANNEL: RENDER ────────────────────────────────────
+  function renderChannels() {
+    const list = document.getElementById('channelList');
+    const mine = myChannels();
+
+    if (mine.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">📭</div>No channels yet.<br>Create or join one.</div>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    mine.forEach(ch => {
+      const data    = channels[ch];
+      const count   = (data.notices || []).length;
+      const isOwner = data.owner === currentUser;
+
+      const btn = document.createElement('button');
+      btn.className = 'channel-btn' + (ch === currentChannel ? ' active' : '');
+
+      const label = document.createElement('span');
+      label.className = 'ch-label';
+      label.textContent = ch;
+
+      const countBadge = document.createElement('span');
+      countBadge.className = 'channel-count';
+      countBadge.textContent = count;
+
+      btn.appendChild(label);
+      btn.appendChild(countBadge);
+
+      if (isOwner) {
+        const ownerTag = document.createElement('span');
+        ownerTag.className = 'owner-tag';
+        ownerTag.textContent = 'owner';
+        btn.appendChild(ownerTag);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'ch-del-btn';
+        delBtn.title     = 'Delete channel';
+        delBtn.textContent = '🗑';
+        delBtn.onclick = e => { e.stopPropagation(); deleteChannelFromSidebar(ch); };
+        btn.appendChild(delBtn);
+      }
+
+      btn.onclick = () => selectChannel(ch);
+      list.appendChild(btn);
+    });
+  }
+
+  // ── CHANNEL: SELECT ────────────────────────────────────
+  function selectChannel(ch) {
+    currentChannel = ch;
+    document.getElementById('currentChannelTitle').textContent = '# ' + ch;
+
+    // Update leave/delete button label
+    const isOwner = channels[ch].owner === currentUser;
+    document.getElementById('leaveBtn').textContent = isOwner ? '🗑 Delete' : '← Leave';
+
+    document.getElementById('selectPrompt').style.display = 'none';
+    const bc = document.getElementById('boardContent');
+    bc.style.display        = 'flex';
+    bc.style.flexDirection  = 'column';
+    bc.style.gap            = '20px';
+
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="all"]').classList.add('active');
+
+    renderChannels();
+    renderNotices();
+    updateMemberBadge();
+  }
+
+  function updateMemberBadge() {
+    if (!currentChannel) return;
+    const count = (channels[currentChannel].members || []).length;
+    document.getElementById('memberCountBadge').textContent = count;
+  }
+
+  // ── FILTER ─────────────────────────────────────────────
+  function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderNotices();
+  }
+
+  // ── FORM SUBMIT ────────────────────────────────────────
+  document.getElementById('noticeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!currentChannel) return;
+
+    const expiryVal = document.getElementById('expiry').value;
+    if (new Date(expiryVal) <= new Date()) {
+      showToast('⚠️', 'Expiry must be in the future');
+      return;
+    }
+
+    const notice = {
+      id:          Date.now(),
+      title:       document.getElementById('title').value.trim(),
+      description: document.getElementById('description').value.trim(),
+      expiry:      expiryVal,
+      priority:    document.getElementById('priority').value,
+      posted:      new Date().toISOString(),
+      postedBy:    currentUser
+    };
+
+    channels[currentChannel].notices.unshift(notice);
+    saveData();
+    renderNotices();
+    renderChannels();
+    this.reset();
+    showToast('📌', 'Notice posted successfully');
+  });
+
+  // ── NOTICES: RENDER ────────────────────────────────────
+  function renderNotices() {
+    const container = document.getElementById('noticeContainer');
+    container.innerHTML = '';
+    if (!currentChannel) return;
+
+    const now = new Date();
+    let notices = channels[currentChannel].notices || [];
+    if (activeFilter !== 'all') notices = notices.filter(n => n.priority === activeFilter);
+
+    const order = { high: 0, medium: 1, low: 2 };
+    notices = [...notices].sort((a, b) => {
+      const aExp = new Date(a.expiry) <= now;
+      const bExp = new Date(b.expiry) <= now;
+      if (aExp !== bExp) return aExp - bExp;
+      if (order[a.priority] !== order[b.priority]) return order[a.priority] - order[b.priority];
+      return new Date(a.expiry) - new Date(b.expiry);
+    });
+
+    const total = (channels[currentChannel].notices || []).length;
+    document.getElementById('noticeCount').textContent =
+      total === 0 ? 'No notices' : `${total} notice${total !== 1 ? 's' : ''}`;
+
+    if (notices.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:40px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
+          <div class="icon">🗒️</div>
+          ${activeFilter !== 'all' ? `No <strong>${activeFilter}</strong> priority notices.` : 'No active notices. Post one above!'}
+        </div>`;
+      return;
+    }
+
+    notices.forEach(n => {
+      const expDate   = new Date(n.expiry);
+      const isExpired = expDate <= now;
+      const hoursLeft = (expDate - now) / 36e5;
+      const isSoon    = !isExpired && hoursLeft < 6;
+
+      const div = document.createElement('div');
+      div.className = `notice ${n.priority}${isExpired ? ' expired' : ''}`;
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'notice-header';
+
+      const dot = document.createElement('div');
+      dot.className = 'priority-dot';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'notice-title';
+      titleEl.textContent = n.title;
+
+      header.appendChild(dot);
+      header.appendChild(titleEl);
+
+      if (isExpired) {
+        const dueBadge = document.createElement('span');
+        dueBadge.className = 'due-badge';
+        dueBadge.textContent = '⚑ DUE';
+        header.appendChild(dueBadge);
+      }
+
+      // Body
+      const desc = document.createElement('p');
+      desc.className = 'notice-desc';
+      desc.textContent = n.description;
+
+      const by = document.createElement('div');
+      by.className = 'notice-by';
+      const byStrong = document.createElement('strong');
+      byStrong.textContent = n.postedBy || 'Unknown';
+      by.appendChild(document.createTextNode('Posted by '));
+      by.appendChild(byStrong);
+
+      // Footer
+      const footer = document.createElement('div');
+      footer.className = 'notice-footer';
+
+      const meta = document.createElement('div');
+      meta.className = 'notice-meta';
+
+      const badge = document.createElement('span');
+      badge.className = 'priority-badge';
+      badge.textContent = n.priority.charAt(0).toUpperCase() + n.priority.slice(1);
+
+      const expiryEl = document.createElement('span');
+      if (isExpired) {
+        expiryEl.className   = 'expiry-text due';
+        expiryEl.textContent = `⚑ Deadline passed: ${expDate.toLocaleString()}`;
+      } else if (isSoon) {
+        expiryEl.className   = 'expiry-text soon';
+        expiryEl.textContent = `⏱ Expires ${expDate.toLocaleString()} · Soon!`;
+      } else {
+        expiryEl.className   = 'expiry-text';
+        expiryEl.textContent = `⏱ Expires ${expDate.toLocaleString()}`;
+      }
+
+      meta.appendChild(badge);
+      meta.appendChild(expiryEl);
+
+      const delBtn = document.createElement('button');
+      delBtn.className   = 'btn-delete';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick     = () => deleteNotice(n.id);
+
+      footer.appendChild(meta);
+      footer.appendChild(delBtn);
+
+      div.appendChild(header);
+      div.appendChild(desc);
+      div.appendChild(by);
+      div.appendChild(footer);
+      container.appendChild(div);
+    });
+  }
+
+  // ── NOTICE: DELETE ─────────────────────────────────────
+  function deleteNotice(id) {
+    channels[currentChannel].notices = channels[currentChannel].notices.filter(n => n.id !== id);
+    saveData();
+    renderNotices();
+    renderChannels();
+    showToast('🗑️', 'Notice removed');
+  }
+
+  // ── MEMBERS MODAL ──────────────────────────────────────
+  function openMembersModal() {
+    if (!currentChannel) return;
+
+    // Only owner can add/remove members
+    const isOwner = channels[currentChannel].owner === currentUser;
+    document.getElementById('addMemberSection').style.display = isOwner ? '' : 'none';
+
+    renderMemberList();
+    document.getElementById('addMemberInput').value = '';
+    document.getElementById('memberError').classList.remove('visible');
+    openModal('membersModal');
+  }
+
+  function renderMemberList() {
+    const list    = document.getElementById('memberList');
+    const members = channels[currentChannel].members || [];
+    const owner   = channels[currentChannel].owner;
+    const isOwner = owner === currentUser;
+    list.innerHTML = '';
+
+    if (members.length === 0) {
+      list.innerHTML = `<div class="empty-state" style="padding:12px 0;">No members yet.</div>`;
+      return;
+    }
+
+    // Sort: owner first
+    const sorted = [...members].sort((a, b) => (a === owner ? -1 : b === owner ? 1 : 0));
+
+    sorted.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'member-row';
+
+      const av = document.createElement('div');
+      av.className   = 'member-avatar';
+      av.textContent = m.charAt(0).toUpperCase();
+
+      const info = document.createElement('div');
+      info.className = 'member-info';
+
+      const name = document.createElement('div');
+      name.className   = 'member-name';
+      name.textContent = m + (m === currentUser ? ' (you)' : '');
+
+      const roleText = document.createElement('div');
+      roleText.className   = 'member-role-text';
+      roleText.textContent = m === owner ? 'Channel Owner' : 'Member';
+
+      info.appendChild(name);
+      info.appendChild(roleText);
+
+      const roleBadge = document.createElement('span');
+      roleBadge.className   = 'role-badge ' + (m === owner ? 'owner' : 'member');
+      roleBadge.textContent = m === owner ? 'Owner' : 'Member';
+
+      row.appendChild(av);
+      row.appendChild(info);
+      row.appendChild(roleBadge);
+
+      // Owner can remove non-owner members
+      if (isOwner && m !== currentUser) {
+        const rmBtn = document.createElement('button');
+        rmBtn.className   = 'btn-remove-member';
+        rmBtn.title       = 'Remove member';
+        rmBtn.textContent = '✕';
+        rmBtn.onclick     = () => removeMember(m);
+        row.appendChild(rmBtn);
+      }
+
+      list.appendChild(row);
+    });
+
+    updateMemberBadge();
+  }
+
+  function addMember() {
+    const input = document.getElementById('addMemberInput');
+    const name  = input.value.trim();
+    const err   = document.getElementById('memberError');
+    if (!name || !currentChannel) return;
+
+    const members = channels[currentChannel].members || [];
+    if (members.includes(name)) {
+      err.classList.add('visible');
+      setTimeout(() => err.classList.remove('visible'), 2500);
+      return;
+    }
+
+    err.classList.remove('visible');
+    channels[currentChannel].members.push(name);
+    input.value = '';
+    saveData();
+    renderMemberList();
+    showToast('👤', `${name} added to channel`);
+  }
+
+  document.getElementById('addMemberInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addMember();
+  });
+
+  function removeMember(name) {
+    if (!confirm(`Remove "${name}" from this channel?`)) return;
+    channels[currentChannel].members = channels[currentChannel].members.filter(m => m !== name);
+    saveData();
+    renderMemberList();
+    showToast('👤', `${name} removed`);
+  }
+
+  // ── JOIN MODAL ─────────────────────────────────────────
+  function openJoinModal() {
+    renderJoinList();
+    openModal('joinModal');
+  }
+
+  function renderJoinList() {
+    const list    = document.getElementById('joinChannelList');
+    const empty   = document.getElementById('joinEmptyState');
+    const mine    = myChannels();
+    const all     = Object.keys(channels);
+    const others  = all.filter(ch => !mine.includes(ch));
+
+    list.innerHTML = '';
+
+    if (others.length === 0) {
+      list.style.display  = 'none';
+      empty.style.display = '';
+      return;
+    }
+
+    empty.style.display = 'none';
+    list.style.display  = 'flex';
+
+    others.forEach(ch => {
+      const data   = channels[ch];
+      const mCount = (data.members || []).length;
+      const nCount = (data.notices  || []).length;
+
+      const row = document.createElement('div');
+      row.className = 'join-channel-row';
+
+      const info = document.createElement('div');
+      info.className = 'join-channel-info';
+
+      const chName = document.createElement('div');
+      chName.className   = 'join-channel-name';
+      chName.textContent = '# ' + ch;
+
+      const meta = document.createElement('div');
+      meta.className   = 'join-channel-meta';
+      meta.textContent = `${mCount} member${mCount !== 1 ? 's' : ''} · ${nCount} notice${nCount !== 1 ? 's' : ''} · Owner: ${data.owner}`;
+
+      info.appendChild(chName);
+      info.appendChild(meta);
+
+      const joinBtn = document.createElement('button');
+      joinBtn.className   = 'btn-join';
+      joinBtn.textContent = 'Join';
+      joinBtn.onclick     = () => joinChannel(ch, joinBtn);
+
+      row.appendChild(info);
+      row.appendChild(joinBtn);
+      list.appendChild(row);
+    });
+  }
+
+  function joinChannel(ch, btn) {
+    if (!channels[ch].members) channels[ch].members = [];
+    if (channels[ch].members.includes(currentUser)) return;
+    channels[ch].members.push(currentUser);
+    saveData();
+    btn.textContent = '✓ Joined';
+    btn.classList.add('joined');
+    btn.disabled = true;
+    renderChannels();
+    showToast('🎉', `Joined "${ch}" successfully!`);
+  }
+
+  // ── INTERVAL ───────────────────────────────────────────
+  setInterval(() => { if (currentChannel) renderNotices(); }, 30000);
+</script>
+
+</body>
+</html>
