@@ -1,55 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi-Channel Digital Notice Board</title>
 
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<!-- NAME SETUP SCREEN -->
+<div id="nameSetup">
+  <div class="setup-card">
+    <div class="big-icon">👤</div>
+    <h2>What's your name?</h2>
+    <p>Your name will be shown on notices you post and visible to other channel members.</p>
+    <input type="text" id="setupNameInput" placeholder="Enter your name..." maxlength="30">
+    <button class="btn-setup" onclick="setupUser()">Get Started →</button>
+  </div>
+</div>
+
 <header>
-<h2>📢 Multi-Channel Digital Notice Board</h2>
+  <div class="header-icon">📢</div>
+  <div>
+    <h1>Digital Notice Board</h1>
+    <p>Multi-channel announcements & alerts</p>
+  </div>
+  <div class="header-user">
+    <span class="user-name-label" id="headerUserName"></span>
+    <div class="user-avatar" id="headerAvatar"></div>
+  </div>
 </header>
 
 <div class="container">
 
-    <!-- CHANNEL SECTION -->
-    <div class="channel-panel">
-        <h3>Create Channel</h3>
-        <input type="text" id="channelName" placeholder="Channel Name">
-        <button onclick="createChannel()">Create</button>
+<aside class="sidebar">
 
-        <h3>Channels</h3>
-        <div id="channelList"></div>
-    </div>
+<div class="panel">
+<div class="panel-title">Create Channel</div>
 
-    <!-- MAIN BOARD -->
-    <div class="main-board">
+<div class="input-row">
+<input type="text" id="channelName" placeholder="Channel name..." maxlength="30">
+<button class="btn-icon" onclick="createChannel()">+</button>
+</div>
 
-        <h3 id="currentChannelTitle">Select a Channel</h3>
+<div class="error-msg" id="channelError">Channel already exists.</div>
+</div>
 
-        <form id="noticeForm">
-            <input type="text" id="title" placeholder="Title" required>
-            <textarea id="description" placeholder="Description" required></textarea>
-            <input type="datetime-local" id="expiry" required>
+<div class="panel">
 
-            <select id="priority" required>
-                <option value="">Priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-            </select>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+<span class="panel-title" style="margin-bottom:0;">My Channels</span>
+<button class="btn-sm" onclick="openJoinModal()">🔍 Browse</button>
+</div>
 
-            <button type="submit">Post Notice</button>
-        </form>
+<div id="channelList"></div>
 
-        <hr>
-        <div id="noticeContainer"></div>
+</div>
 
-    </div>
+</aside>
+
+<main class="main-board">
+
+<div id="selectPrompt" class="select-prompt">
+<div class="icon">👈</div>
+<h3>Select a Channel</h3>
+<p>Choose or create a channel to view and post notices.</p>
+</div>
+
+<div id="boardContent">
+
+<div class="board-header">
+<h2 id="currentChannelTitle"></h2>
+</div>
+
+<form id="noticeForm">
+
+<input type="text" id="title" placeholder="Notice title..." required>
+
+<textarea id="description" placeholder="Notice description..." required></textarea>
+
+<input type="datetime-local" id="expiry" required>
+
+<select id="priority" required>
+<option value="">Select priority</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option>
+</select>
+
+<button type="submit">Post Notice</button>
+
+</form>
+
+<div id="noticeContainer"></div>
+
+</div>
+
+</main>
 
 </div>
 
